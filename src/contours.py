@@ -37,13 +37,13 @@ def get_saturated_contours(image):
     return masked, contours, colour
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     camera, capture_buffer = setup_camera()
     camera.capture(capture_buffer, format="bgr")
     image = capture_buffer.array
     masked, contours, found_colour = get_saturated_contours(image)
-    cv2.imwrite('original.png', image)
-    cv2.imwrite('masked.png', masked)
+    cv2.imwrite("original.png", image)
+    cv2.imwrite("masked.png", masked)
     cv2.drawContours(image, contours[:1], -1, (0, 255, 0), 1)
-    cv2.imwrite('with_contours.png', image)
+    cv2.imwrite("with_contours.png", image)
     print(found_colour)

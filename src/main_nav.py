@@ -10,8 +10,8 @@ cap = cv2.VideoCapture(0)
 
 print("VL53L1X Qwiic Test\n")
 ToF = qwiic.QwiicVL53L1X()
-if (ToF.sensor_init() == None):					 # Begin returns 0 on a good init
-	print("Sensor online!\n")
+if ToF.sensor_init() == None:  # Begin returns 0 on a good init
+    print("Sensor online!\n")
 
 # Check slope for navigation
 def checkSlope(x1, y1, x2, y2):
@@ -23,7 +23,11 @@ def checkSlope(x1, y1, x2, y2):
 # Finding the intersection of 2 lines
 def intersection(line, line1):
     x = (line1[1] - line[1]) / (line[0] - line1[0])
-    if (x <= 800 and x >= 0) and (((line[0] * x) + line[1]) >= 0) and ((line[0] * x) + line[1] <= 600):
+    if (
+        (x <= 800 and x >= 0)
+        and (((line[0] * x) + line[1]) >= 0)
+        and ((line[0] * x) + line[1] <= 600)
+    ):
         return [x, (line[0] * x) + line[1]]
 
 
@@ -40,7 +44,7 @@ def polyReg(xcors, ycors):
 
     time = np.array(xcors)
     avg = np.array(ycors)
-    initialGuess = [5, 5, -.01]
+    initialGuess = [5, 5, -0.01]
     guessedFactors = [func(x, *initialGuess) for x in time]
     popt, pcov = curve_fit(func, time, avg, initialGuess)
     cont = np.linspace(min(time), max(time), 50)
@@ -140,7 +144,11 @@ def averageLanes(lines):
                 for x in finalLinesCopy:
                     if not status:
                         if abs(x * 1.2) > abs(m) > abs(x * 0.8):
-                            if abs(finalLinesCopy[x][0][1] * 1.2) > abs(b) > abs(finalLinesCopy[x][0][1] * 0.8):
+                            if (
+                                abs(finalLinesCopy[x][0][1] * 1.2)
+                                > abs(b)
+                                > abs(finalLinesCopy[x][0][1] * 0.8)
+                            ):
                                 finalLines[x].append([m, b, line])
                                 status = True
                                 break
@@ -162,9 +170,6 @@ def averageLanes(lines):
         allycors = [[l1y1, l1y2], [l2y1, l2y2]]
 
         return allxcors, allycors
-
-
-
 
     except Exception as e:
         pass
@@ -194,10 +199,12 @@ def edgeDetect(img):
     edges = cv2.Canny(img, 250, 300)
     return cv2.GaussianBlur(edges, (3, 3), 0)
 
+
 def write_and_print(text):
     print(text)
     with open("write.txt", "w") as f:
         f.write(text)
+
 
 # Main function
 def run(screen):
@@ -208,12 +215,21 @@ def run(screen):
     distance = ToF.get_distance()
     distance_is_too_close = False
     distanceFeet = distance / (25.4 * 12.0)
-    cv2.putText(screen, f'Distance: {"{:.2f}".format(distanceFeet)}', (40, 50), cv2.FONT_HERSHEY_COMPLEX,
-                1, (255, 0, 0), 3)
+    cv2.putText(
+        screen,
+        f'Distance: {"{:.2f}".format(distanceFeet)}',
+        (40, 50),
+        cv2.FONT_HERSHEY_COMPLEX,
+        1,
+        (255, 0, 0),
+        3,
+    )
 
-    if distanceFeet < 0.7:
+    if distanceFeet < 2:
         distance_is_too_close = True
-        write_and_print("STOP: There is an object less than 1 foot away, please turn to continue navigation.")
+        write_and_print(
+            "STOP: There is an object less than 2 feet away please turn to continue navigation."
+        )
 
     line = cv2.HoughLinesP(fin, 2, np.pi / 180, 20, 7, 7)
     if not (line is None):
@@ -246,7 +262,7 @@ def run(screen):
         filterl2y = []
 
         for count, i in enumerate(ycors):
-            if (i * l2m + l2b < xcors[count]):
+            if i * l2m + l2b < xcors[count]:
                 filterl2x.append(xcors[count])
                 filterl2y.append(i)
             else:
@@ -268,7 +284,7 @@ def run(screen):
         results = intersection([l1m, l1b], [l2m, l2b])
         if not distance_is_too_close:
             if not (results is None):
-                if (results[0] > 400):
+                if results[0] > 400:
                     write_and_print("Turn Left")
                 else:
                     write_and_print("Turn Right")
@@ -281,8 +297,13 @@ def run(screen):
                 if i == 0:
                     pass
                 else:
-                    cv2.line(screen, (int(polyx1[i]), int(polyy1[i])), (int(polyx1[i - 1]), int(polyy1[i - 1])),
-                             (255, 255, 0), 10)
+                    cv2.line(
+                        screen,
+                        (int(polyx1[i]), int(polyy1[i])),
+                        (int(polyx1[i - 1]), int(polyy1[i - 1])),
+                        (255, 255, 0),
+                        10,
+                    )
         except Exception as e:
             print(e)
         try:
@@ -292,20 +313,23 @@ def run(screen):
                 if i == 0:
                     pass
                 else:
-                    cv2.line(screen, (int(polyx2[i]), int(polyy2[i])), (int(polyx2[i - 1]), int(polyy2[i - 1])),
-                             (255, 255, 0), 10)
+                    cv2.line(
+                        screen,
+                        (int(polyx2[i]), int(polyy2[i])),
+                        (int(polyx2[i - 1]), int(polyy2[i - 1])),
+                        (255, 255, 0),
+                        10,
+                    )
 
         except:
             pass
-
-
-
 
     except Exception as e:
         with open("write.txt", "w") as f:
             f.write("")
 
     return screen
+
 
 ToF.start_ranging()
 # Running infinite loop to get constant video feeds
@@ -320,7 +344,7 @@ while True:
 
     cv2.imshow("Navigation View", run(screen))
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
         ToF.stop_ranging()
 
