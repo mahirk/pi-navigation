@@ -1,12 +1,18 @@
 import cv2
 import qwiic
 import numpy as np
+import argparse
+
 from numpy import ones, vstack
 from numpy.linalg import lstsq
 import math
 from scipy.optimize import curve_fit
 
 cap = cv2.VideoCapture(0)
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--show_display", help="boolean representation on whether to show display", default=False
+)
 
 print("VL53L1X Qwiic Test\n")
 ToF = qwiic.QwiicVL53L1X()
@@ -332,6 +338,7 @@ def run(screen):
 
 
 ToF.start_ranging()
+args = parser.parse_args()
 # Running infinite loop to get constant video feeds
 while True:
     try:
@@ -342,7 +349,10 @@ while True:
         write_and_print("Done")
         ToF.stop_ranging()
 
-    cv2.imshow("Navigation View", run(screen))
+    if args.show_display:
+        cv2.imshow("Navigation View", run(screen))
+    else:
+        run(screen)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
